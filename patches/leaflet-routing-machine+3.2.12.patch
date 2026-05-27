@@ -1,0 +1,29 @@
+diff --git a/node_modules/leaflet-routing-machine/dist/leaflet-routing-machine.js b/node_modules/leaflet-routing-machine/dist/leaflet-routing-machine.js
+index 12d31a8..1cdf178 100644
+--- a/node_modules/leaflet-routing-machine/dist/leaflet-routing-machine.js
++++ b/node_modules/leaflet-routing-machine/dist/leaflet-routing-machine.js
+@@ -16182,17 +16182,13 @@ module.exports={
+ 		},
+ 
+ 		_clearLines: function() {
+-			if (this._line) {
+-				this._map.removeLayer(this._line);
+-				delete this._line;
+-			}
+-			if (this._alternatives && this._alternatives.length) {
+-				for (var i in this._alternatives) {
+-					this._map.removeLayer(this._alternatives[i]);
+-				}
+-				this._alternatives = [];
+-			}
+-		}
++    if (this._layerHolder && this._line) {
++        this._layerHolder.removeLayer(this._line);
++    } else {
++        console.warn("[L.Routing] Skipped _clearLines: _layerHolder or _line was null");
++    }
++    this._line = null;
++}
+ 	});
+ })();
+ 
