@@ -391,14 +391,7 @@ export default function App() {
               <button className="secondary" onClick={() => setStep(2)}>← Back</button>
               <button className="gold" onClick={submitBooking}>✅ Submit Booking</button>
 
-              {bookingId && (
-                <div className="tracking-card">
-                  <h3>Rider Tracking</h3>
-                  <p><b>Tracking ID:</b> {bookingId}</p>
-                  <p><b>Status:</b> Pending rider assignment</p>
-                  <p>Email/SMS confirmation data is saved. Actual sending needs Email/SMS provider API.</p>
-                </div>
-              )}
+             
             </div>
           )}
         </>
