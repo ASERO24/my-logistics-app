@@ -7,7 +7,7 @@ import "leaflet-routing-machine";
 import { addDoc, collection, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 import "./App.css";
-
+const logoUrl = "/alca-logo.png";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -220,7 +220,7 @@ export default function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="logo">AL</div>
+          <img src={logoUrl} alt="ALCA Logo" className="logo" />
           <div>
             <h1>ALCA Logistics</h1>
             <p>Booking Schedule</p>
