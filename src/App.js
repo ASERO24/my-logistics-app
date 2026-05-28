@@ -100,7 +100,6 @@ function RouteDisplay({ pickupCoords, dropoffCoords, extraStopsCoords, vehicle, 
 
 export default function App() {
   const [step, setStep] = useState(1);
-  const [view, setView] = useState("booking");
   const [center, setCenter] = useState([14.5995, 120.9842]);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
@@ -120,7 +119,6 @@ export default function App() {
   const [paymentMethod, setPaymentMethod] = useState("GCash");
   const [gcashRef, setGcashRef] = useState("");
   const [bookingId, setBookingId] = useState("");
-  const [adminBookings, setAdminBookings] = useState([]);
 
   async function geocode(address, setter) {
     if (!address.trim()) return alert("Ilagay muna ang address.");
@@ -190,21 +188,9 @@ export default function App() {
       await addDoc(collection(db, "bookings"), bookingData);
       setBookingId(trackingCode);
       alert(`✅ Booking saved! Tracking ID: ${trackingCode}`);
-      loadAdminBookings();
     } catch (error) {
       console.error(error);
       alert("Hindi na-save sa Firebase. Check Firebase rules/config.");
-    }
-  }
-
-  async function loadAdminBookings() {
-    try {
-      const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      setAdminBookings(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    } catch (err) {
-      console.warn(err);
-      alert("Hindi mabasa ang admin bookings. Check Firebase rules.");
     }
   }
 
@@ -228,115 +214,113 @@ export default function App() {
         </div>
 
         <div className="tabs">
-          <button className={view === "booking" ? "tab active" : "tab"} onClick={() => setView("booking")}>Booking</button>
+          <button className="tab active">Booking</button>
         </div>
 
-        {view === "booking" ? (
-          <>
-            <Progress />
+        <>
+          <Progress />
 
-            {step === 1 && (
-              <div className="panel">
-                <label>Pickup Address</label>
-                <input value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="Enter pickup address" />
-                <button className="primary" onClick={() => geocode(pickup, setPickupCoords)}>Set Pickup 📍</button>
+          {step === 1 && (
+            <div className="panel">
+              <label>Pickup Address</label>
+              <input value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="Enter pickup address" />
+              <button className="primary" onClick={() => geocode(pickup, setPickupCoords)}>Set Pickup 📍</button>
 
-                <label>Drop-off Address</label>
-                <input value={dropoff} onChange={(e) => setDropoff(e.target.value)} placeholder="Enter drop-off address" />
-                <button className="success" onClick={() => geocode(dropoff, setDropoffCoords)}>Set Drop-off 🏁</button>
+              <label>Drop-off Address</label>
+              <input value={dropoff} onChange={(e) => setDropoff(e.target.value)} placeholder="Enter drop-off address" />
+              <button className="success" onClick={() => geocode(dropoff, setDropoffCoords)}>Set Drop-off 🏁</button>
 
-                <label>Vehicle Needed</label>
-                <select value={vehicle} onChange={(e) => setVehicle(e.target.value)}>
-                  {Object.keys(vehicleRates).map((v) => <option key={v}>{v}</option>)}
-                </select>
+              <label>Vehicle Needed</label>
+              <select value={vehicle} onChange={(e) => setVehicle(e.target.value)}>
+                {Object.keys(vehicleRates).map((v) => <option key={v}>{v}</option>)}
+              </select>
 
-                <label>Extra Stops</label>
-                <input type="number" min="0" value={extraStops} onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setExtraStops(val);
-                  const copy = [...extraStopsCoords];
-                  while (copy.length < val) copy.push({ lat: 0, lng: 0, address: "" });
-                  setExtraStopsCoords(copy.slice(0, val));
-                }} />
+              <label>Extra Stops</label>
+              <input type="number" min="0" value={extraStops} onChange={(e) => {
+                const val = Number(e.target.value);
+                setExtraStops(val);
+                const copy = [...extraStopsCoords];
+                while (copy.length < val) copy.push({ lat: 0, lng: 0, address: "" });
+                setExtraStopsCoords(copy.slice(0, val));
+              }} />
 
-                {Array.from({ length: extraStops }, (_, idx) => (
-                  <div className="mini-card" key={idx}>
-                    <input placeholder={`Extra Stop ${idx + 1}`} value={extraStopsCoords[idx]?.address || ""} onChange={(e) => {
-                      const copy = [...extraStopsCoords];
-                      copy[idx] = { ...copy[idx], address: e.target.value };
-                      setExtraStopsCoords(copy);
-                    }} />
-                    <button className="secondary" onClick={() => geocode(extraStopsCoords[idx]?.address || "", (coords) => {
-                      const copy = [...extraStopsCoords];
-                      copy[idx] = { lat: coords[0], lng: coords[1], address: extraStopsCoords[idx]?.address || "" };
-                      setExtraStopsCoords(copy);
-                    })}>Set Stop</button>
-                  </div>
-                ))}
-
-                <div className="fare-box">
-                  <span>Distance</span><b>{distance || 0} km</b>
-                  <span>Total Fare</span><b>₱{fare || calculateFare(distance, vehicle, extraStopsCoords.filter((s) => s.lat && s.lng).length)}</b>
+              {Array.from({ length: extraStops }, (_, idx) => (
+                <div className="mini-card" key={idx}>
+                  <input placeholder={`Extra Stop ${idx + 1}`} value={extraStopsCoords[idx]?.address || ""} onChange={(e) => {
+                    const copy = [...extraStopsCoords];
+                    copy[idx] = { ...copy[idx], address: e.target.value };
+                    setExtraStopsCoords(copy);
+                  }} />
+                  <button className="secondary" onClick={() => geocode(extraStopsCoords[idx]?.address || "", (coords) => {
+                    const copy = [...extraStopsCoords];
+                    copy[idx] = { lat: coords[0], lng: coords[1], address: extraStopsCoords[idx]?.address || "" };
+                    setExtraStopsCoords(copy);
+                  })}>Set Stop</button>
                 </div>
-                <button className="gold" onClick={goToDetails}>Next: Receiver Details →</button>
-              </div>
-            )}
+              ))}
 
-            {step === 2 && (
-              <div className="panel">
-                <label>Sender Name</label><input value={senderName} onChange={(e) => setSenderName(e.target.value)} />
-                <label>Sender Number</label><input value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} />
-                <label>Sender Email</label><input type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} />
-                <label>Receiver Name</label><input value={receiverName} onChange={(e) => setReceiverName(e.target.value)} />
-                <label>Receiver Number</label><input value={receiverNumber} onChange={(e) => setReceiverNumber(e.target.value)} />
-                <label>Additional Notes</label><textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-                <button className="secondary" onClick={() => setStep(1)}>← Back</button>
-                <button className="gold" onClick={goToConfirm}>Next: Confirm Booking →</button>
+              <div className="fare-box">
+                <span>Distance</span><b>{distance || 0} km</b>
+                <span>Total Fare</span><b>₱{fare || calculateFare(distance, vehicle, extraStopsCoords.filter((s) => s.lat && s.lng).length)}</b>
               </div>
-            )}
+              <button className="gold" onClick={goToDetails}>Next: Receiver Details →</button>
+            </div>
+          )}
 
-            {step === 3 && (
-              <div className="panel">
-                <h2>Confirm Booking</h2>
-                <div className="summary">
-                  <p><b>Pickup:</b> {pickup || "Pinned on map"}</p>
-                  <p><b>Drop-off:</b> {dropoff || "Pinned on map"}</p>
-                  <p><b>Vehicle:</b> {vehicle}</p>
-                  <p><b>Distance:</b> {distance} km</p>
-                  <p><b>Total Fare:</b> ₱{fare}</p>
+          {step === 2 && (
+            <div className="panel">
+              <label>Sender Name</label><input value={senderName} onChange={(e) => setSenderName(e.target.value)} />
+              <label>Sender Number</label><input value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} />
+              <label>Sender Email</label><input type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} />
+              <label>Receiver Name</label><input value={receiverName} onChange={(e) => setReceiverName(e.target.value)} />
+              <label>Receiver Number</label><input value={receiverNumber} onChange={(e) => setReceiverNumber(e.target.value)} />
+              <label>Additional Notes</label><textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <button className="secondary" onClick={() => setStep(1)}>← Back</button>
+              <button className="gold" onClick={goToConfirm}>Next: Confirm Booking →</button>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="panel">
+              <h2>Confirm Booking</h2>
+              <div className="summary">
+                <p><b>Pickup:</b> {pickup || "Pinned on map"}</p>
+                <p><b>Drop-off:</b> {dropoff || "Pinned on map"}</p>
+                <p><b>Vehicle:</b> {vehicle}</p>
+                <p><b>Distance:</b> {distance} km</p>
+                <p><b>Total Fare:</b> ₱{fare}</p>
+              </div>
+
+              <label>Payment Method</label>
+              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                <option>GCash</option>
+                <option>Cash on Pickup</option>
+              </select>
+
+              {paymentMethod === "GCash" && (
+                <div className="gcash-box">
+                  <h3>GCash Payment</h3>
+                  <p>Send payment to:</p>
+                  <b>{gcashName}</b>
+                  <b>{gcashNumber}</b>
+                  <input placeholder="GCash Reference Number" value={gcashRef} onChange={(e) => setGcashRef(e.target.value)} />
                 </div>
+              )}
 
-                <label>Payment Method</label>
-                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                  <option>GCash</option>
-                  <option>Cash on Pickup</option>
-                </select>
+              <button className="secondary" onClick={() => setStep(2)}>← Back</button>
+              <button className="gold" onClick={submitBooking}>✅ Submit Booking</button>
 
-                {paymentMethod === "GCash" && (
-                  <div className="gcash-box">
-                    <h3>GCash Payment</h3>
-                    <p>Send payment to:</p>
-                    <b>{gcashName}</b>
-                    <b>{gcashNumber}</b>
-                    <input placeholder="GCash Reference Number" value={gcashRef} onChange={(e) => setGcashRef(e.target.value)} />
-                  </div>
-                )}
-
-                <button className="secondary" onClick={() => setStep(2)}>← Back</button>
-                <button className="gold" onClick={submitBooking}>✅ Submit Booking</button>
-
-                {bookingId && (
-                  <div className="tracking-card">
-                    <h3>Rider Tracking</h3>
-                    <p><b>Tracking ID:</b> {bookingId}</p>
-                    <p><b>Status:</b> Pending rider assignment</p>
-                    <p>Email/SMS confirmation data is saved. Actual sending needs Email/SMS provider API.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        ) : null}
+              {bookingId && (
+                <div className="tracking-card">
+                  <h3>Rider Tracking</h3>
+                  <p><b>Tracking ID:</b> {bookingId}</p>
+                  <p><b>Status:</b> Pending rider assignment</p>
+                  <p>Email/SMS confirmation data is saved. Actual sending needs Email/SMS provider API.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       </aside>
 
       <main className="map-area">
@@ -345,8 +329,8 @@ export default function App() {
           <MapClickHandler pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} setPickupCoords={setPickupCoords} setDropoffCoords={setDropoffCoords} />
           <TileLayer attribution="&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {pickupCoords && dropoffCoords && <RouteDisplay pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} extraStopsCoords={extraStopsCoords} vehicle={vehicle} setDistance={setDistance} setFare={setFare} />}
-          {pickupCoords && <Marker position={pickupCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setPickupCoords([lat, lng]); reverseGeocode(lat, lng, setPickup); } }}><Popup>Pickup Location</Popup></Marker>}
-          {dropoffCoords && <Marker position={dropoffCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setDropoffCoords([lat, lng]); reverseGeocode(lat, lng, setDropoff); } }}><Popup>Dropoff Location</Popup></Marker>}
+          {pickupCoords && <Marker position={pickupCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setPickupCoords([lat, lng]); reverseGeocode(lat, lng, (addr) => setPickup(addr)); } }} />}
+          {dropoffCoords && <Marker position={dropoffCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setDropoffCoords([lat, lng]); reverseGeocode(lat, lng, (addr) => setDropoff(addr)); } }} />}
           {extraStopsCoords.map((s, i) => s.lat && s.lng ? <Marker key={i} position={[s.lat, s.lng]} draggable><Popup>Extra Stop {i + 1}</Popup></Marker> : null)}
         </MapContainer>
       </main>
