@@ -334,17 +334,19 @@ export default function App() {
                   </div>
                 )}
               </div>
-)}
-</aside>
+            )}
+          </>
+        ) : null}
+      </aside>
 
-<main className="map-area">
+      <main className="map-area">
         <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
           <ChangeMapView coords={center} />
           <MapClickHandler pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} setPickupCoords={setPickupCoords} setDropoffCoords={setDropoffCoords} />
           <TileLayer attribution="&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           {pickupCoords && dropoffCoords && <RouteDisplay pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} extraStopsCoords={extraStopsCoords} vehicle={vehicle} setDistance={setDistance} setFare={setFare} />}
-          {pickupCoords && <Marker position={pickupCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setPickupCoords([lat, lng]); reverseGeocode(lat, lng, setPickup); } }}><Popup>Pickup</Popup></Marker>}
-          {dropoffCoords && <Marker position={dropoffCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setDropoffCoords([lat, lng]); reverseGeocode(lat, lng, setDropoff); } }}><Popup>Drop-off</Popup></Marker>}
+          {pickupCoords && <Marker position={pickupCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setPickupCoords([lat, lng]); reverseGeocode(lat, lng, (addr) => setPickup(addr)); } }}><Popup>Pickup</Popup></Marker>}
+          {dropoffCoords && <Marker position={dropoffCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setDropoffCoords([lat, lng]); reverseGeocode(lat, lng, (addr) => setDropoff(addr)); } }}><Popup>Drop-off</Popup></Marker>}
           {extraStopsCoords.map((s, i) => s.lat && s.lng ? <Marker key={i} position={[s.lat, s.lng]} draggable><Popup>Extra Stop {i + 1}</Popup></Marker> : null)}
         </MapContainer>
       </main>
