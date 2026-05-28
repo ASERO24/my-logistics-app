@@ -334,7 +334,6 @@ export default function App() {
                   </div>
                 )}
               </div>
-            )}
           </>
         ) : (
           <div className="panel admin">
