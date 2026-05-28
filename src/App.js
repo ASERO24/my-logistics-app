@@ -332,23 +332,8 @@ export default function App() {
                     <p><b>Status:</b> Pending rider assignment</p>
                     <p>Email/SMS confirmation data is saved. Actual sending needs Email/SMS provider API.</p>
                   </div>
-                )}
-              </div>
-          </>
-        ) : (
-          <div className="panel admin">
-              <div className="booking-row" key={b.id}>
-                <b>{b.trackingCode || b.id}</b>
-                <span>{b.status || "Pending"}</span>
-                <p>{b.senderName} → {b.receiverName}</p>
-                <p>₱{b.totalFare || b.price} • {b.vehicle || b.unitNeeded}</p>
-                <p>{b.createdAtText}</p>
-              </div>
-            ))}
-          </div>
-        )}
+              </>
       </aside>
-
       <main className="map-area">
         <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
           <ChangeMapView coords={center} />
