@@ -229,7 +229,6 @@ export default function App() {
 
         <div className="tabs">
           <button className={view === "booking" ? "tab active" : "tab"} onClick={() => setView("booking")}>Booking</button>
-          <button className={view === "admin" ? "tab active" : "tab"} onClick={() => { setView("admin"); loadAdminBookings(); }}>Admin Dashboard</button>
         </div>
 
         {view === "booking" ? (
@@ -339,9 +338,6 @@ export default function App() {
           </>
         ) : (
           <div className="panel admin">
-            <h2>Admin Dashboard</h2>
-            <button className="gold" onClick={loadAdminBookings}>Refresh Bookings</button>
-            {adminBookings.length === 0 ? <p>No bookings loaded.</p> : adminBookings.map((b) => (
               <div className="booking-row" key={b.id}>
                 <b>{b.trackingCode || b.id}</b>
                 <span>{b.status || "Pending"}</span>
