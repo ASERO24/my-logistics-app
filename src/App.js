@@ -140,6 +140,23 @@ export default function App() {
     }
   }
 
+  function removePickup() {
+    setPickupCoords(null);
+    setPickup("");
+  }
+
+  function removeDropoff() {
+    setDropoffCoords(null);
+    setDropoff("");
+  }
+
+  function removeExtraStop(idx) {
+    const copy = [...extraStopsCoords];
+    copy.splice(idx, 1);
+    setExtraStopsCoords(copy);
+    setExtraStops(extraStops - 1);
+  }
+
   function goToDetails() {
     if (!pickupCoords || !dropoffCoords) return alert("Set Pickup at Drop-off muna.");
     setFare(calculateFare(distance, vehicle, extraStopsCoords.filter((s) => s.lat && s.lng).length));
@@ -224,11 +241,19 @@ export default function App() {
             <div className="panel">
               <label>Pickup Address</label>
               <input value={pickup} onChange={(e) => setPickup(e.target.value)} placeholder="Enter pickup address" />
-              <button className="primary" onClick={() => geocode(pickup, setPickupCoords)}>Set Pickup 📍</button>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button className="primary" onClick={() => geocode(pickup, setPickupCoords)}>Set Pickup 📍</button>
+                {pickupCoords && <button className="danger" onClick={removePickup}>Remove ✕</button>}
+              </div>
+              {pickupCoords && <p style={{ fontSize: "12px", color: "#666" }}>📍 Pinned: {pickup || "On Map"}</p>}
 
               <label>Drop-off Address</label>
               <input value={dropoff} onChange={(e) => setDropoff(e.target.value)} placeholder="Enter drop-off address" />
-              <button className="success" onClick={() => geocode(dropoff, setDropoffCoords)}>Set Drop-off 🏁</button>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button className="success" onClick={() => geocode(dropoff, setDropoffCoords)}>Set Drop-off 🏁</button>
+                {dropoffCoords && <button className="danger" onClick={removeDropoff}>Remove ✕</button>}
+              </div>
+              {dropoffCoords && <p style={{ fontSize: "12px", color: "#666" }}>🏁 Pinned: {dropoff || "On Map"}</p>}
 
               <label>Vehicle Needed</label>
               <select value={vehicle} onChange={(e) => setVehicle(e.target.value)}>
@@ -251,11 +276,16 @@ export default function App() {
                     copy[idx] = { ...copy[idx], address: e.target.value };
                     setExtraStopsCoords(copy);
                   }} />
-                  <button className="secondary" onClick={() => geocode(extraStopsCoords[idx]?.address || "", (coords) => {
-                    const copy = [...extraStopsCoords];
-                    copy[idx] = { lat: coords[0], lng: coords[1], address: extraStopsCoords[idx]?.address || "" };
-                    setExtraStopsCoords(copy);
-                  })}>Set Stop</button>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button className="secondary" onClick={() => geocode(extraStopsCoords[idx]?.address || "", (coords) => {
+                      const copy = [...extraStopsCoords];
+                      copy[idx] = { lat: coords[0], lng: coords[1], address: extraStopsCoords[idx]?.address || "" };
+                      setExtraStopsCoords(copy);
+                    })}>Set Stop</button>
+                    {extraStopsCoords[idx]?.lat && extraStopsCoords[idx]?.lng && (
+                      <button className="danger" onClick={() => removeExtraStop(idx)}>Remove ✕</button>
+                    )}
+                  </div>
                 </div>
               ))}
 
