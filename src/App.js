@@ -24,7 +24,7 @@ const vehicleRates = {
 };
 
 const gcashName = "ALCA Logistics";
-const gcashNumber = "09XX XXX XXXX";
+const gcashNumber = "coming soon";
 
 function calculateFare(distanceKm, vehicle, stops = 0) {
   const rate = vehicleRates[vehicle] || vehicleRates.Motorcycle;
