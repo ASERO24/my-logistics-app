@@ -119,6 +119,7 @@ export default function App() {
   const [paymentMethod, setPaymentMethod] = useState("GCash");
   const [gcashRef, setGcashRef] = useState("");
   const [bookingId, setBookingId] = useState("");
+  const [showDropMenu, setShowDropMenu] = useState(false);
 
   async function geocode(address, setter) {
     if (!address.trim()) return alert("Ilagay muna ang address.");
@@ -155,6 +156,14 @@ export default function App() {
     copy.splice(idx, 1);
     setExtraStopsCoords(copy);
     setExtraStops(extraStops - 1);
+  }
+
+  function setNumDrops(num) {
+    setExtraStops(num);
+    const copy = [...extraStopsCoords];
+    while (copy.length < num) copy.push({ lat: 0, lng: 0, address: "" });
+    setExtraStopsCoords(copy.slice(0, num));
+    setShowDropMenu(false);
   }
 
   function goToDetails() {
@@ -260,18 +269,56 @@ export default function App() {
                 {Object.keys(vehicleRates).map((v) => <option key={v}>{v}</option>)}
               </select>
 
-              <label>Extra Stops</label>
-              <input type="number" min="0" value={extraStops} onChange={(e) => {
-                const val = Number(e.target.value);
-                setExtraStops(val);
-                const copy = [...extraStopsCoords];
-                while (copy.length < val) copy.push({ lat: 0, lng: 0, address: "" });
-                setExtraStopsCoords(copy.slice(0, val));
-              }} />
+              <label>Additional Drops 🚚</label>
+              <div style={{ position: "relative", marginBottom: "16px" }}>
+                <button 
+                  className="secondary" 
+                  onClick={() => setShowDropMenu(!showDropMenu)}
+                  style={{ width: "100%", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                >
+                  {extraStops === 0 ? "Select Drops (0)" : `Selected: Drop ${extraStops}`}
+                  <span style={{ fontSize: "16px" }}>▼</span>
+                </button>
+                {showDropMenu && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    backgroundColor: "#fff",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    zIndex: 10,
+                    marginTop: "4px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                  }}>
+                    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                      <button
+                        key={num}
+                        onClick={() => setNumDrops(num)}
+                        style={{
+                          width: "100%",
+                          padding: "10px 16px",
+                          textAlign: "left",
+                          border: "none",
+                          backgroundColor: extraStops === num ? "#e8f0fe" : "#fff",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          borderBottom: "1px solid #eee",
+                          color: extraStops === num ? "#1976d2" : "#333",
+                          fontWeight: extraStops === num ? "600" : "400",
+                        }}
+                      >
+                        {num === 0 ? "None" : `Drop ${num}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {Array.from({ length: extraStops }, (_, idx) => (
                 <div className="mini-card" key={idx}>
-                  <input placeholder={`Extra Stop ${idx + 1}`} value={extraStopsCoords[idx]?.address || ""} onChange={(e) => {
+                  <input placeholder={`Drop ${idx + 1} Address`} value={extraStopsCoords[idx]?.address || ""} onChange={(e) => {
                     const copy = [...extraStopsCoords];
                     copy[idx] = { ...copy[idx], address: e.target.value };
                     setExtraStopsCoords(copy);
@@ -281,11 +328,14 @@ export default function App() {
                       const copy = [...extraStopsCoords];
                       copy[idx] = { lat: coords[0], lng: coords[1], address: extraStopsCoords[idx]?.address || "" };
                       setExtraStopsCoords(copy);
-                    })}>Set Stop</button>
+                    })}>Set Drop</button>
                     {extraStopsCoords[idx]?.lat && extraStopsCoords[idx]?.lng && (
                       <button className="danger" onClick={() => removeExtraStop(idx)}>Remove ✕</button>
                     )}
                   </div>
+                  {extraStopsCoords[idx]?.lat && extraStopsCoords[idx]?.lng && (
+                    <p style={{ fontSize: "12px", color: "#666", margin: "4px 0 0 0" }}>📍 Drop {idx + 1}: {extraStopsCoords[idx]?.address || "On Map"}</p>
+                  )}
                 </div>
               ))}
 
@@ -316,6 +366,7 @@ export default function App() {
               <div className="summary">
                 <p><b>Pickup:</b> {pickup || "Pinned on map"}</p>
                 <p><b>Drop-off:</b> {dropoff || "Pinned on map"}</p>
+                <p><b>Additional Drops:</b> {extraStops > 0 ? `${extraStops} stops` : "None"}</p>
                 <p><b>Vehicle:</b> {vehicle}</p>
                 <p><b>Distance:</b> {distance} km</p>
                 <p><b>Total Fare:</b> ₱{fare}</p>
@@ -361,7 +412,7 @@ export default function App() {
           {pickupCoords && dropoffCoords && <RouteDisplay pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} extraStopsCoords={extraStopsCoords} vehicle={vehicle} setDistance={setDistance} setFare={setFare} />}
           {pickupCoords && <Marker position={pickupCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setPickupCoords([lat, lng]); reverseGeocode(lat, lng, (addr) => setPickup(addr)); } }} />}
           {dropoffCoords && <Marker position={dropoffCoords} draggable eventHandlers={{ dragend: (e) => { const { lat, lng } = e.target.getLatLng(); setDropoffCoords([lat, lng]); reverseGeocode(lat, lng, (addr) => setDropoff(addr)); } }} />}
-          {extraStopsCoords.map((s, i) => s.lat && s.lng ? <Marker key={i} position={[s.lat, s.lng]} draggable><Popup>Extra Stop {i + 1}</Popup></Marker> : null)}
+          {extraStopsCoords.map((s, i) => s.lat && s.lng ? <Marker key={i} position={[s.lat, s.lng]} draggable><Popup>Drop {i + 1}</Popup></Marker> : null)}
         </MapContainer>
       </main>
     </div>
